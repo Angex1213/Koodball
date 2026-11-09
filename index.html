@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KOODBALL</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080d18;color:white;font-family:Arial;text-align:center}
+h1{color:#35aaff;letter-spacing:5px;margin:14px}
+#score{font-size:30px;font-weight:bold;margin:10px}
+canvas{width:96%;max-width:1100px;border:3px solid #35aaff;border-radius:12px;background:#168447;display:block;margin:auto}
+p{color:#cbd5e1}
+button{background:#168cff;color:white;border:0;padding:12px 22px;border-radius:9px;font-weight:bold;font-size:16px}
+</style>
+</head>
+<body>
+<h1>⚽ KOODBALL</h1>
+<div id="score">AZUL 0 - 0 ROJO</div>
+<canvas id="game" width="1100" height="650"></canvas>
+<p>WASD / FLECHAS: MOVERSE | X / ESPACIO: DISPARAR</p>
+<button onclick="reset()">REINICIAR PARTIDO</button>
+<script>
+const c=document.getElementById("game"),ctx=c.getContext("2d");
+const keys={};
+onkeydown=e=>{keys[e.key.toLowerCase()]=true;
+if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault()};
+onkeyup=e=>keys[e.key.toLowerCase()]=false;
+
+let scoreA=0,scoreB=0;
+let player={x:250,y:325,r:19,vx:0,vy:0};
+let enemy={x:850,y:325,r:19,vx:0,vy:0};
+let ball={x:550,y:325,r:12,vx:0,vy:0};
+let cooldown=0;
+
+function reset(){
+player.x=250;player.y=325;
+enemy.x=850;enemy.y=325;
+ball.x=550;ball.y=325;ball.vx=0;ball.vy=0;
+}
+
+function circle(x,y,r,color){
+ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+ctx.fillStyle=color;ctx.fill();
+ctx.strokeStyle="white";ctx.lineWidth=2;ctx.stroke();
+}
+
+function move(p,dx,dy){
+p.vx+=dx*0.7;p.vy+=dy*0.7;
+p.vx*=0.86;p.vy*=0.86;
+p.x+=p.vx;p.y+=p.vy;
+p.x=Math.max(25,Math.min(1075,p.x));
+p.y=Math.max(25,Math.min(625,p.y));
+}
+
+function collide(p){
+let dx=ball.x-p.x,dy=ball.y-p.y;
+let d=Math.hypot(dx,dy)||1;
+let min=p.r+ball.r;
+if(d<min){
+let nx=dx/d,ny=dy/d;
+ball.x=p.x+nx*min;
+ball.y=p.y+ny*min;
+ball.vx+=nx*2.2+p.vx*.55;
+ball.vy+=ny*2.2+p.vy*.55;
+}
+}
+
+function kick(p,dir){
+let d=Math.hypot(ball.x-p.x,ball.y-p.y);
+if(d<85 && cooldown<=0){
+let a=Math.atan2(ball.y-p.y,ball.x-p.x);
+ball.vx+=Math.cos(a)*11+dir*2;
+ball.vy+=Math.sin(a)*11;
+cooldown=22;
+}
+}
+
+function draw(){
+ctx.clearRect(0,0,1100,650);
+
+// Campo
+ctx.fillStyle="#168447";ctx.fillRect(0,0,1100,650);
+for(let i=0;i<11;i++){
+ctx.fillStyle=i%2?"#168447":"#1b914e";
+ctx.fillRect(i*100,0,100,650);
+}
+ctx.strokeStyle="white";ctx.lineWidth=4;
+ctx.strokeRect(10,10,1080,630);
+ctx.beginPath();ctx.moveTo(550,10);ctx.lineTo(550,640);ctx.stroke();
+ctx.beginPath();ctx.arc(550,325,85,0,Math.PI*2);ctx.stroke();
+ctx.strokeRect(10,210,130,230);
+ctx.strokeRect(960,210,130,230);
+ctx.strokeRect(10,270,55,110);
+ctx.strokeRect(1035,270,55,110);
+
+// Porterías
+ctx.fillStyle="#dceeff";ctx.fillRect(0,260,12,130);
+ctx.fillRect(1088,260,12,130);
+
+// Movimiento
+let dx=0,dy=0;
+if(keys.w||keys.arrowup)dy--;
+if(keys.s||keys.arrowdown)dy++;
+if(keys.a||keys.arrowleft)dx--;
+if(keys.d||keys.arrowright)dx++;
+let l=Math.hypot(dx,dy)||1;
+move(player,dx/l,dy/l);
+
+// Rival: persigue la pelota
+let ex=ball.x-enemy.x,ey=ball.y-enemy.y;
+let el=Math.hypot(ex,ey)||1;
+move(enemy,ex/el*.75,ey/el*.75);
+
+collide(player);collide(enemy);
+
+// Disparo
+if(keys.x||keys[" "])kick(player,1);
+if(cooldown>0)cooldown--;
+
+// Física de la pelota
+ball.x+=ball.vx;ball.y+=ball.vy;
+ball.vx*=.992;ball.vy*=.992;
+
+if(ball.y<ball.r+10||ball.y>640-ball.r)ball.vy*=-.85;
+
+if(ball.x<ball.r+10){
+if(ball.y>260&&ball.y<390){scoreB++;reset()}
+else ball.vx=Math.abs(ball.vx)*.85;
+}
+if(ball.x>1090-ball.r){
+if(ball.y>260&&ball.y<390){scoreA++;reset()}
+else ball.vx=-Math.abs(ball.vx)*.85;
+}
+
+circle(player.x,player.y,player.r,"#168cff");
+circle(enemy.x,enemy.y,enemy.r,"#ef3434");
+circle(ball.x,ball.y,ball.r,"#ffffff");
+
+ctx.fillStyle="white";
+ctx.font="bold 14px Arial";
+ctx.fillText("TÚ",player.x-10,player.y-28);
+ctx.fillText("CPU",enemy.x-15,enemy.y-28);
+
+document.getElementById("score").textContent=
+"AZUL "+scoreA+" - "+scoreB+" ROJO";
+
+requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
