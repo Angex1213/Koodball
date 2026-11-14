@@ -3,152 +3,440 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KOODBALL</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KOOD CITY - El Salvador</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#080d18;color:white;font-family:Arial;text-align:center}
-h1{color:#35aaff;letter-spacing:5px;margin:14px}
-#score{font-size:30px;font-weight:bold;margin:10px}
-canvas{width:96%;max-width:1100px;border:3px solid #35aaff;border-radius:12px;background:#168447;display:block;margin:auto}
-p{color:#cbd5e1}
-button{background:#168cff;color:white;border:0;padding:12px 22px;border-radius:9px;font-weight:bold;font-size:16px}
+body{margin:0;overflow:hidden;background:#101820;color:white;font-family:Arial}
+canvas{display:block}
+#hud{
+ position:fixed;top:14px;left:14px;z-index:5;
+ background:#07121de8;border:1px solid #269bff;
+ border-radius:12px;padding:13px;min-width:190px;
+}
+#hud h2{margin:0 0 8px;color:#39b5ff}
+#hud small{color:#9bbbd0}
+#location{margin-top:8px;color:#ffe27b}
+#help{
+ position:fixed;bottom:12px;left:12px;z-index:5;
+ background:#07121de8;padding:12px;border-radius:10px;
+ font-size:12px;line-height:1.7
+}
+#tag{
+ position:fixed;right:12px;top:12px;
+ background:#07121de8;padding:12px;border-radius:10px;
+ color:#55caff;font-size:12px
+}
+#speed{
+ position:fixed;right:12px;bottom:12px;
+ background:#07121de8;padding:12px;border-radius:10px;
+ font-size:18px
+}
 </style>
 </head>
 <body>
-<h1>⚽ KOODBALL</h1>
-<div id="score">AZUL 0 - 0 ROJO</div>
-<canvas id="game" width="1100" height="650"></canvas>
-<p>WASD / FLECHAS: MOVERSE | X / ESPACIO: DISPARAR</p>
-<button onclick="reset()">REINICIAR PARTIDO</button>
-<script>
-const c=document.getElementById("game"),ctx=c.getContext("2d");
+
+<div id="hud">
+<h2>🇸🇻 KOOD CITY</h2>
+<small>EL SALVADOR OPEN WORLD</small>
+<div id="location">SOYAPANGO</div>
+</div>
+
+<div id="tag">3D WORLD · V1</div>
+
+<div id="help">
+<b>CONTROLES</b><br>
+W / ↑ : Acelerar<br>
+S / ↓ : Retroceder<br>
+A / ← : Girar izquierda<br>
+D / → : Girar derecha<br>
+ESPACIO : Frenar
+</div>
+
+<div id="speed">0 km/h</div>
+
+<script type="module">
+import * as THREE from
+'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x91c4e2);
+scene.fog=new THREE.Fog(0x91c4e2,350,1800);
+
+const camera=new THREE.PerspectiveCamera(
+65,innerWidth/innerHeight,0.1,2500
+);
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.15;
+document.body.appendChild(renderer.domElement);
+
+// LUCES
+scene.add(new THREE.HemisphereLight(0xe5f3ff,0x526044,2));
+
+const sun=new THREE.DirectionalLight(0xffedcf,3);
+sun.position.set(-200,300,150);
+sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+scene.add(sun);
+
+// MATERIALES
+const material=(color,roughness=.9,metalness=0)=>
+ new THREE.MeshStandardMaterial({color,roughness,metalness});
+
+// TERRENO
+const terrain=new THREE.Mesh(
+ new THREE.PlaneGeometry(2400,2400),
+ material(0x557c48)
+);
+terrain.rotation.x=-Math.PI/2;
+terrain.receiveShadow=true;
+scene.add(terrain);
+
+// MONTAÑAS
+for(let i=0;i<22;i++){
+ const h=100+Math.random()*170;
+ const mountain=new THREE.Mesh(
+  new THREE.ConeGeometry(65+Math.random()*70,h,8),
+  material(i%2?0x557c52:0x70836a)
+ );
+ mountain.position.set(
+  (Math.random()-.5)*1900,h/2-15,
+  (Math.random()-.5)*1900
+ );
+ scene.add(mountain);
+}
+
+// UBICACIONES APROXIMADAS
+// Coordenadas geográficas convertidas a kilómetros.
+// No representan todavía un trazado vial oficial.
+const places=[
+ {name:"SOYAPANGO",lat:13.710,lon:-89.139},
+ {name:"PLAZA MUNDO",lat:13.710,lon:-89.140},
+ {name:"SAN SALVADOR",lat:13.693,lon:-89.219},
+ {name:"SAN VICENTE",lat:13.641,-1:0,lon:-88.785},
+ {name:"APASTEPEQUE",lat:13.663,lon:-88.750}
+];
+
+const baseLat=places[0].lat;
+const baseLon=places[0].lon;
+
+function position(p){
+ return new THREE.Vector3(
+  (p.lon-baseLon)*108*1000*Math.cos(baseLat*Math.PI/180)/1000,
+  0,
+  -(p.lat-baseLat)*111
+ );
+}
+
+// ESCALA VISUAL: se comprime el territorio para poder jugar.
+// Mantiene el orden y la dirección aproximada de las localidades.
+const SCALE=.42;
+function world(p){
+ const v=position(p);
+ return new THREE.Vector3(v.x*SCALE,0,v.z*SCALE);
+}
+
+const locations=places.map(p=>({
+ ...p,pos:world(p)
+}));
+
+// CARRETERAS
+function road(a,b,width=13,color=0x30343a){
+ const direction=new THREE.Vector3().subVectors(b,a);
+ const length=direction.length();
+ const mesh=new THREE.Mesh(
+  new THREE.PlaneGeometry(width,length),
+  material(color)
+ );
+ mesh.rotation.x=-Math.PI/2;
+ mesh.rotation.z=-Math.atan2(direction.x,direction.z);
+ mesh.position.copy(a).add(b).multiplyScalar(.5);
+ mesh.position.y=.025;
+ scene.add(mesh);
+}
+
+// CARRETERA PRINCIPAL
+for(let i=0;i<locations.length-1;i++){
+ road(locations[i].pos,locations[i+1].pos,15);
+}
+
+// LINEAS VIALES
+function roadLine(a,b){
+ const direction=new THREE.Vector3().subVectors(b,a);
+ const length=direction.length();
+ const mesh=new THREE.Mesh(
+  new THREE.PlaneGeometry(.5,length),
+  new THREE.MeshBasicMaterial({color:0xf0dfa0})
+ );
+ mesh.rotation.x=-Math.PI/2;
+ mesh.rotation.z=-Math.atan2(direction.x,direction.z);
+ mesh.position.copy(a).add(b).multiplyScalar(.5);
+ mesh.position.y=.06;
+ scene.add(mesh);
+}
+for(let i=0;i<locations.length-1;i++){
+ roadLine(locations[i].pos,locations[i+1].pos);
+}
+
+// CALLES DE CADA LOCALIDAD
+for(const place of locations){
+ for(let j=-3;j<=3;j++){
+  const r1=new THREE.Mesh(
+   new THREE.PlaneGeometry(9,190),
+   material(0x414449)
+  );
+  r1.rotation.x=-Math.PI/2;
+  r1.position.set(place.pos.x+j*27,.035,place.pos.z);
+  scene.add(r1);
+
+  const r2=new THREE.Mesh(
+   new THREE.PlaneGeometry(190,9),
+   material(0x414449)
+  );
+  r2.rotation.x=-Math.PI/2;
+  r2.position.set(place.pos.x,.035,place.pos.z+j*27);
+  scene.add(r2);
+ }
+}
+
+// EDIFICIOS
+const buildingColors=[
+ 0xc4b9a6,0x9ba4a9,0xd4c9b5,
+ 0x858c93,0xb0a99c,0xc4c4b9
+];
+
+function building(x,z,h,w,d){
+ const b=new THREE.Mesh(
+  new THREE.BoxGeometry(w,h,d),
+  material(buildingColors[Math.floor(Math.random()*buildingColors.length)])
+ );
+ b.position.set(x,h/2,z);
+ b.castShadow=true;
+ b.receiveShadow=true;
+ scene.add(b);
+
+ // Ventanas
+ for(let y=4;y<h-2;y+=6){
+  for(let wx=-w/2+4;wx<w/2-2;wx+=6){
+   const win=new THREE.Mesh(
+    new THREE.BoxGeometry(2.5,2.5,.12),
+    material(0x538398,.3,.2)
+   );
+   win.position.set(x+wx,y,z-d/2-.08);
+   scene.add(win);
+  }
+ }
+}
+
+// Centros urbanos y pueblos
+for(let index=0;index<locations.length;index++){
+ const center=locations[index].pos;
+ const count=index===1||index===2?100:55;
+
+ for(let i=0;i<count;i++){
+  const x=center.x+(Math.random()-.5)*210;
+  const z=center.z+(Math.random()-.5)*210;
+
+  if(Math.abs(x-center.x)<17||
+     Math.abs(z-center.z)<17)continue;
+
+  const h=9+Math.random()*40;
+  building(x,z,h,12+Math.random()*12,12+Math.random()*12);
+ }
+}
+
+// PLAZA MUNDO
+const plaza=locations[1].pos;
+const mall=new THREE.Mesh(
+ new THREE.BoxGeometry(65,17,50),
+ material(0xe1d8c9)
+);
+mall.position.set(plaza.x,8.5,plaza.z+48);
+mall.castShadow=true;
+scene.add(mall);
+
+// LETRERO PLAZA MUNDO
+function label(text,pos,color="#ffffff"){
+ const canvas=document.createElement("canvas");
+ canvas.width=512;
+ canvas.height=128;
+ const ctx=canvas.getContext("2d");
+ ctx.fillStyle="rgba(5,15,25,.85)";
+ ctx.fillRect(0,0,512,128);
+ ctx.fillStyle=color;
+ ctx.font="bold 38px Arial";
+ ctx.textAlign="center";
+ ctx.fillText(text,256,79);
+ const tex=new THREE.CanvasTexture(canvas);
+ const sprite=new THREE.Sprite(
+  new THREE.SpriteMaterial({map:tex,transparent:true})
+ );
+ sprite.position.set(pos.x,22,pos.z);
+ sprite.scale.set(65,16,1);
+ scene.add(sprite);
+}
+
+for(const place of locations){
+ label(place.name,place.pos,
+  place.name==="PLAZA MUNDO"?"#ffe17a":"#ffffff");
+}
+label("PLAZA MUNDO",new THREE.Vector3(plaza.x,0,plaza.z+48),"#ffe17a");
+
+// PALMERAS
+function palm(x,z){
+ const trunk=new THREE.Mesh(
+  new THREE.CylinderGeometry(.3,.55,9,8),
+  material(0x795332)
+ );
+ trunk.position.set(x,4.5,z);
+ scene.add(trunk);
+
+ for(let i=0;i<7;i++){
+  const leaf=new THREE.Mesh(
+   new THREE.ConeGeometry(1.1,7,6),
+   material(0x236e40)
+  );
+  leaf.position.set(
+   x+Math.cos(i*Math.PI/3.5)*2,
+   9,
+   z+Math.sin(i*Math.PI/3.5)*2
+  );
+  leaf.rotation.z=Math.PI/2;
+  leaf.rotation.y=i*Math.PI/3.5;
+  scene.add(leaf);
+ }
+}
+for(const p of locations){
+ for(let i=-4;i<=4;i++){
+  palm(p.pos.x+i*20,p.pos.z+100);
+ }
+}
+
+// VEHÍCULO
+const car=new THREE.Group();
+
+const body=new THREE.Mesh(
+ new THREE.BoxGeometry(3.5,1.15,6),
+ new THREE.MeshStandardMaterial({
+  color:0x086bdb,metalness:.65,roughness:.25
+ })
+);
+body.position.y=1;
+body.castShadow=true;
+car.add(body);
+
+const cabin=new THREE.Mesh(
+ new THREE.BoxGeometry(2.8,1.2,3),
+ material(0x203b4e,.2,.3)
+);
+cabin.position.set(0,2,.15);
+car.add(cabin);
+
+const wheels=[];
+for(const x of [-1.9,1.9]){
+ for(const z of [-1.9,1.9]){
+  const wheel=new THREE.Mesh(
+   new THREE.CylinderGeometry(.65,.65,.4,24),
+   material(0x111111)
+  );
+  wheel.rotation.z=Math.PI/2;
+  wheel.position.set(x,.65,z);
+  car.add(wheel);
+  wheels.push(wheel);
+ }
+}
+scene.add(car);
+car.position.copy(locations[0].pos);
+car.position.y=0;
+
+// PUNTO DE DESTINO
+const destination=new THREE.Mesh(
+ new THREE.TorusGeometry(7,.6,12,40),
+ new THREE.MeshBasicMaterial({color:0xffdf33})
+);
+destination.rotation.x=Math.PI/2;
+destination.position.copy(locations[4].pos);
+destination.position.y=1;
+scene.add(destination);
+
+// CONTROLES
 const keys={};
-onkeydown=e=>{keys[e.key.toLowerCase()]=true;
-if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault()};
-onkeyup=e=>keys[e.key.toLowerCase()]=false;
+window.addEventListener("keydown",e=>{
+ keys[e.key.toLowerCase()]=true;
+ if(e.code==="Space")e.preventDefault();
+});
+window.addEventListener("keyup",e=>{
+ keys[e.key.toLowerCase()]=false;
+});
 
-let scoreA=0,scoreB=0;
-let player={x:250,y:325,r:19,vx:0,vy:0};
-let enemy={x:850,y:325,r:19,vx:0,vy:0};
-let ball={x:550,y:325,r:12,vx:0,vy:0};
-let cooldown=0;
+// CONDUCCIÓN
+let velocity=0;
+let angle=0;
+const clock=new THREE.Clock();
 
-function reset(){
-player.x=250;player.y=325;
-enemy.x=850;enemy.y=325;
-ball.x=550;ball.y=325;ball.vx=0;ball.vy=0;
+function animate(){
+ requestAnimationFrame(animate);
+ const dt=Math.min(clock.getDelta(),.04);
+
+ if(keys.w||keys.arrowup)velocity+=22*dt;
+ if(keys.s||keys.arrowdown)velocity-=24*dt;
+ if(keys[" "])velocity*=Math.pow(.015,dt);
+
+ velocity=Math.max(-16,Math.min(48,velocity));
+ velocity*=Math.pow(.985,dt*60);
+
+ if(Math.abs(velocity)>.5){
+  const turn=(keys.a||keys.arrowleft?1:0)-
+             (keys.d||keys.arrowright?1:0);
+  angle+=turn*dt*1.8*Math.sign(velocity);
+ }
+
+ car.rotation.y=angle;
+ car.position.x-=Math.sin(angle)*velocity*dt;
+ car.position.z-=Math.cos(angle)*velocity*dt;
+
+ for(const wheel of wheels){
+  wheel.rotation.x+=velocity*dt;
+ }
+
+ // CÁMARA
+ const offset=new THREE.Vector3(
+  Math.sin(angle)*17,9,
+  Math.cos(angle)*17
+ );
+ const target=car.position.clone().add(offset);
+ camera.position.lerp(target,1-Math.pow(.002,dt));
+ camera.lookAt(car.position.x,2,car.position.z);
+
+ // LOCALIDAD MÁS CERCANA
+ let closest=locations[0];
+ let min=Infinity;
+ for(const p of locations){
+  const d=car.position.distanceTo(p.pos);
+  if(d<min){min=d;closest=p;}
+ }
+ document.getElementById("location").textContent=closest.name;
+ document.getElementById("speed").textContent=
+ Math.round(Math.abs(velocity)*4)+" km/h";
+
+ destination.rotation.z+=dt;
+ renderer.render(scene,camera);
 }
 
-function circle(x,y,r,color){
-ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
-ctx.fillStyle=color;ctx.fill();
-ctx.strokeStyle="white";ctx.lineWidth=2;ctx.stroke();
-}
+camera.position.set(0,10,20);
+animate();
 
-function move(p,dx,dy){
-p.vx+=dx*0.7;p.vy+=dy*0.7;
-p.vx*=0.86;p.vy*=0.86;
-p.x+=p.vx;p.y+=p.vy;
-p.x=Math.max(25,Math.min(1075,p.x));
-p.y=Math.max(25,Math.min(625,p.y));
-}
-
-function collide(p){
-let dx=ball.x-p.x,dy=ball.y-p.y;
-let d=Math.hypot(dx,dy)||1;
-let min=p.r+ball.r;
-if(d<min){
-let nx=dx/d,ny=dy/d;
-ball.x=p.x+nx*min;
-ball.y=p.y+ny*min;
-ball.vx+=nx*2.2+p.vx*.55;
-ball.vy+=ny*2.2+p.vy*.55;
-}
-}
-
-function kick(p,dir){
-let d=Math.hypot(ball.x-p.x,ball.y-p.y);
-if(d<85 && cooldown<=0){
-let a=Math.atan2(ball.y-p.y,ball.x-p.x);
-ball.vx+=Math.cos(a)*11+dir*2;
-ball.vy+=Math.sin(a)*11;
-cooldown=22;
-}
-}
-
-function draw(){
-ctx.clearRect(0,0,1100,650);
-
-// Campo
-ctx.fillStyle="#168447";ctx.fillRect(0,0,1100,650);
-for(let i=0;i<11;i++){
-ctx.fillStyle=i%2?"#168447":"#1b914e";
-ctx.fillRect(i*100,0,100,650);
-}
-ctx.strokeStyle="white";ctx.lineWidth=4;
-ctx.strokeRect(10,10,1080,630);
-ctx.beginPath();ctx.moveTo(550,10);ctx.lineTo(550,640);ctx.stroke();
-ctx.beginPath();ctx.arc(550,325,85,0,Math.PI*2);ctx.stroke();
-ctx.strokeRect(10,210,130,230);
-ctx.strokeRect(960,210,130,230);
-ctx.strokeRect(10,270,55,110);
-ctx.strokeRect(1035,270,55,110);
-
-// Porterías
-ctx.fillStyle="#dceeff";ctx.fillRect(0,260,12,130);
-ctx.fillRect(1088,260,12,130);
-
-// Movimiento
-let dx=0,dy=0;
-if(keys.w||keys.arrowup)dy--;
-if(keys.s||keys.arrowdown)dy++;
-if(keys.a||keys.arrowleft)dx--;
-if(keys.d||keys.arrowright)dx++;
-let l=Math.hypot(dx,dy)||1;
-move(player,dx/l,dy/l);
-
-// Rival: persigue la pelota
-let ex=ball.x-enemy.x,ey=ball.y-enemy.y;
-let el=Math.hypot(ex,ey)||1;
-move(enemy,ex/el*.75,ey/el*.75);
-
-collide(player);collide(enemy);
-
-// Disparo
-if(keys.x||keys[" "])kick(player,1);
-if(cooldown>0)cooldown--;
-
-// Física de la pelota
-ball.x+=ball.vx;ball.y+=ball.vy;
-ball.vx*=.992;ball.vy*=.992;
-
-if(ball.y<ball.r+10||ball.y>640-ball.r)ball.vy*=-.85;
-
-if(ball.x<ball.r+10){
-if(ball.y>260&&ball.y<390){scoreB++;reset()}
-else ball.vx=Math.abs(ball.vx)*.85;
-}
-if(ball.x>1090-ball.r){
-if(ball.y>260&&ball.y<390){scoreA++;reset()}
-else ball.vx=-Math.abs(ball.vx)*.85;
-}
-
-circle(player.x,player.y,player.r,"#168cff");
-circle(enemy.x,enemy.y,enemy.r,"#ef3434");
-circle(ball.x,ball.y,ball.r,"#ffffff");
-
-ctx.fillStyle="white";
-ctx.font="bold 14px Arial";
-ctx.fillText("TÚ",player.x-10,player.y-28);
-ctx.fillText("CPU",enemy.x-15,enemy.y-28);
-
-document.getElementById("score").textContent=
-"AZUL "+scoreA+" - "+scoreB+" ROJO";
-
-requestAnimationFrame(draw);
-}
-draw();
+window.addEventListener("resize",()=>{
+ camera.aspect=innerWidth/innerHeight;
+ camera.updateProjectionMatrix();
+ renderer.setSize(innerWidth,innerHeight);
+});
 </script>
 </body>
 </html>
