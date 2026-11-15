@@ -62,14 +62,28 @@ shop('SUPERMERCADO',-150,250,0xd8d1b5,34,25,'market');shop('TALLER',250,150,0x89
 const gas=[];
 for(const [x,z] of [[-250,150],[250,-250],[350,250]]){box(scene,new THREE.BoxGeometry(34,8,24),mat(0xe6e0ce),x,4,z);addCollider(x,z,34,24);box(scene,new THREE.BoxGeometry(38,1.4,28),mat(0xc92e2e),x,8.7,z);for(let k=-1;k<=1;k++)box(scene,new THREE.BoxGeometry(2,3,2),mat(0xe8e8e8),x+k*8,1.5,z-17);label('GASOLINERA',x,z-20);gas.push({x,z,type:'gas',name:'GASOLINERA'})}
 for(let i=-3;i<=3;i++){const x=i*100;const pole=box(scene,new THREE.CylinderGeometry(.16,.16,8,8),mat(0x343a40),x+13,4,18);box(scene,new THREE.BoxGeometry(1.2,2.8,1),mat(0x20252a),x+13,7,18);for(let j=0;j<3;j++)box(scene,new THREE.SphereGeometry(.28,8,8),mat([0xff302b,0xffc928,0x37d66b][j]),x+13,7.8-j*.8,18.55)}
-// Personaje y atuendo
-const player=new THREE.Group();scene.add(player);const skin=mat(0xb97850),shirt=mat(0x111827),pants=mat(0x202a38),shoe=mat(0x090b10),hair=mat(0x17120f);
-box(player,new THREE.CylinderGeometry(.42,.48,1.05,10),shirt,0,1.35,0);box(player,new THREE.SphereGeometry(.36,12,10),skin,0,2.12,0);box(player,new THREE.SphereGeometry(.37,12,8),hair,0,2.35,-.02);
-const arms=[],legs=[];for(const side of [-1,1]){arms.push(box(player,new THREE.CapsuleGeometry(.13,.68,4,8),shirt,side*.57,1.43,0));legs.push(box(player,new THREE.CapsuleGeometry(.17,.68,4,8),pants,side*.23,.55,0));box(player,new THREE.BoxGeometry(.3,.16,.48),shoe,side*.23,.12,.1)}
+// Personaje 3D mejorado: ropa, rostro, taper fade y extremidades articuladas
+const player=new THREE.Group();scene.add(player);
+const skin=mat(0xb97850,.82),shirt=mat(0x101319,.88),pants=mat(0x252b35,.92),shoe=mat(0x080a0e,.72),hair=mat(0x17120f,.95),white=mat(0xe7e7e7),dark=mat(0x111820);
+const torso=box(player,new THREE.CapsuleGeometry(.39,.62,6,12),shirt,0,1.38,0);torso.scale.set(1.08,1,0.72);
+box(player,new THREE.CylinderGeometry(.13,.15,.2,12),skin,0,1.91,0);
+const head=box(player,new THREE.SphereGeometry(.31,20,16),skin,0,2.18,0);head.scale.set(.88,1.13,.9);
+box(player,new THREE.SphereGeometry(.315,16,12),hair,0,2.36,-.025).scale.set(1,.55,1);
+box(player,new THREE.BoxGeometry(.53,.12,.48),hair,0,2.45,.015);
+for(const side of [-1,1]){box(player,new THREE.SphereGeometry(.055,10,8),skin,side*.29,2.16,0);box(player,new THREE.SphereGeometry(.035,8,8),dark,side*.115,2.2,.27);box(player,new THREE.BoxGeometry(.11,.025,.045),hair,side*.115,2.25,.265)}
+box(player,new THREE.BoxGeometry(.09,.035,.08),skin,0,2.08,.285);
+const arms=[],legs=[],feet=[];
+for(const side of [-1,1]){
+ const shoulder=box(player,new THREE.SphereGeometry(.2,12,10),shirt,side*.43,1.65,0);shoulder.scale.set(.9,1.15,.9);
+ const arm=box(player,new THREE.CapsuleGeometry(.125,.53,5,10),shirt,side*.49,1.28,0);arm.rotation.z=side*-.08;arms.push(arm);
+ box(player,new THREE.SphereGeometry(.13,10,8),skin,side*.5,.91,.015);
+ const leg=box(player,new THREE.CapsuleGeometry(.16,.64,5,10),pants,side*.2,.49,0);legs.push(leg);
+ const foot=box(player,new THREE.BoxGeometry(.32,.17,.55),shoe,side*.2,.12,.12);feet.push(foot);
+}
 player.position.set(0,0,0);
 // Coches y motos funcionales
 function makeCar(color){const g=new THREE.Group(),paint=new THREE.MeshStandardMaterial({color,metalness:.72,roughness:.24}),glass=mat(0x152d3d,.12,.35),rubber=mat(0x101114,.98),chrome=mat(0x9da8ad,.24,.8);box(g,new THREE.BoxGeometry(3.65,.72,6.5),paint,0,1.05,0);box(g,new THREE.BoxGeometry(3.35,.42,5.4),paint,0,1.48,-.05);box(g,new THREE.BoxGeometry(2.8,1.15,3.15),glass,0,2.05,-.15);box(g,new THREE.BoxGeometry(2.92,.16,3.25),paint,0,2.62,-.15);box(g,new THREE.BoxGeometry(3.72,.28,.22),chrome,0,.82,3.25);box(g,new THREE.BoxGeometry(3.72,.28,.22),chrome,0,.82,-3.25);box(g,new THREE.BoxGeometry(1.25,.38,.12),mat(0x111820),0,1.15,3.31);const wheels=[];for(const x of [-1.9,1.9])for(const z of [-2.15,2.15]){const w=box(g,new THREE.CylinderGeometry(.62,.62,.44,24),rubber,x,.62,z);w.rotation.z=Math.PI/2;wheels.push(w);const rim=box(g,new THREE.CylinderGeometry(.34,.34,.46,16),chrome,x,.62,z);rim.rotation.z=Math.PI/2;const hub=box(g,new THREE.CylinderGeometry(.12,.12,.48,12),mat(0x30363b,.25,.8),x,.62,z);hub.rotation.z=Math.PI/2}for(const x of [-1.12,1.12]){box(g,new THREE.BoxGeometry(.78,.3,.08),mat(0xfff2c7,.2),x,1.28,3.29);box(g,new THREE.BoxGeometry(.78,.3,.08),mat(0xff2118,.2),x,1.28,-3.29);box(g,new THREE.BoxGeometry(.18,.45,.45),paint,x*1.58,1.65,.8)}return {mesh:g,wheels,type:'car'}}
-function makeBike(color){const g=new THREE.Group();const frame=mat(color,.35,.5);for(const z of [-1.2,1.2]){const w=box(g,new THREE.TorusGeometry(.48,.12,8,16),mat(0x111111),0,.65,z);w.rotation.y=Math.PI/2}box(g,new THREE.BoxGeometry(.28,.35,1.5),frame,0,1.05,0);box(g,new THREE.BoxGeometry(.7,.18,.5),mat(0x151515),0,1.45,-.25);box(g,new THREE.BoxGeometry(.7,.12,.2),frame,0,1.7,.75);return {mesh:g,wheels:[],type:'bike'}}
+function makeBike(color){const g=new THREE.Group(),frame=mat(color,.32,.65),black=mat(0x111318,.85),metal=mat(0x929da3,.25,.8);for(const z of [-1.25,1.25]){const tire=box(g,new THREE.TorusGeometry(.49,.13,10,24),black,0,.65,z);tire.rotation.y=Math.PI/2;const rim=box(g,new THREE.TorusGeometry(.29,.035,8,20),metal,0,.65,z);rim.rotation.y=Math.PI/2;for(let k=0;k<8;k++){const spoke=box(g,new THREE.BoxGeometry(.035,.035,.52),metal,0,.65,z);spoke.rotation.z=k*Math.PI/4;spoke.rotation.y=Math.PI/2} }box(g,new THREE.BoxGeometry(.28,.34,1.45),frame,0,1.02,0);box(g,new THREE.BoxGeometry(.62,.16,.62),black,0,1.43,-.3);box(g,new THREE.BoxGeometry(.72,.12,.25),frame,0,1.62,.72);box(g,new THREE.CylinderGeometry(.12,.12,.75,12),metal,0,1.22,1.12).rotation.x=Math.PI/2;box(g,new THREE.SphereGeometry(.2,12,10),mat(0xffedb0,.25),0,1.25,1.37);box(g,new THREE.BoxGeometry(.18,.3,.18),mat(0xff2820),0,1.22,-1.34);box(g,new THREE.BoxGeometry(.7,.08,.14),metal,0,1.68,.8);return {mesh:g,wheels:[],type:'bike'}}
 const owned=[{name:'Deportivo azul',price:0,type:'car',color:0x0878e8,owned:true},{name:'Muscle rojo',price:1800,type:'car',color:0xd52b25,owned:false},{name:'Todoterreno negro',price:2600,type:'car',color:0x20252b,owned:false},{name:'Moto deportiva',price:2200,type:'bike',color:0xf2a900,owned:false},{name:'Moto urbana',price:1400,type:'bike',color:0x2c9b69,owned:false}];
 let current=makeCar(owned[0].color);scene.add(current.mesh);current.mesh.position.set(8,0,10);let driving=false,velocity=0,angle=0,playerAngle=0,cash=1000,gameMinutes=480,quality=1,missionDone=false;const keys={};let nearby=null;let cameraYaw=0,cameraDragging=false,lastPointerX=0,cameraDistance=12;
 function toast(t){const el=document.getElementById('toast');el.textContent=t;el.style.display='block';setTimeout(()=>el.style.display='none',1800)}
