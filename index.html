@@ -3,7 +3,7 @@
 <style>
 *{box-sizing:border-box}body{margin:0;overflow:hidden;background:#101923;color:#fff;font:14px Arial}canvas{display:block}
 #hud{position:fixed;top:14px;left:14px;padding:12px 15px;background:#07121ddd;border:1px solid #36aaff;border-radius:12px;z-index:2;min-width:190px}
-#hud h2{margin:0 0 5px;color:#50c2ff;letter-spacing:2px}#place{color:#ffe18a;margin-top:8px}
+#hud h2{margin:0 0 5px;color:#50c2ff;letter-spacing:2px}#quality{display:inline-block;margin-top:8px;padding:4px 8px;border:1px solid #e9bd56;border-radius:6px;color:#ffe18a;font-size:11px;font-weight:bold;letter-spacing:1px;}#place{color:#ffe18a;margin-top:8px}
 #help{position:fixed;bottom:12px;left:12px;padding:10px 13px;background:#07121ddd;border-radius:10px;line-height:1.65;font-size:12px;z-index:2}
 #speed{position:fixed;right:14px;bottom:14px;background:#07121ddd;border:1px solid #36aaff;border-radius:10px;padding:12px;font-size:18px;z-index:2}
 #mode{position:fixed;right:14px;top:14px;background:#07121ddd;padding:10px 13px;border-radius:10px;color:#75d5ff;z-index:2}
@@ -19,16 +19,16 @@
 #interact button{background:#1679b9;color:white;border:0;border-radius:6px;padding:7px 10px;margin:3px;cursor:pointer}
 </style></head><body>
 <div id="interact"></div>
-<div id="hud"><h2>GTA 5</h2><small>EL SALVADOR • OPEN WORLD PROTOTYPE</small><div id="place">SOYAPANGO</div></div>
+<div id="hud"><h2>GTA 5</h2><small>EL SALVADOR • OPEN WORLD PROTOTYPE</small><div id="place">SOYAPANGO</div><div id="quality">✦ 4K ULTRA</div></div>
 <div id="mode">A PIE</div><div id="clock">08:00 • DÍA</div><div id="mission"><b style="color:#ffe18a">TRABAJO DISPONIBLE</b><br>Ve al marcador dorado para completar tu primer encargo.<br><small>Recompensa: $500</small></div><div id="mapbox"><canvas id="map" width="170" height="170"></canvas></div><div id="money"> $ 1,000</div><div id="garage" style="display:none;position:fixed;right:14px;top:62px;z-index:5;background:#07121df2;border:1px solid #36aaff;border-radius:12px;padding:14px;min-width:190px"><b style="color:#70d0ff">CONCESIONARIO</b><p style="margin:8px 0">Elige tu vehículo:</p><button data-car="0">Deportivo azul</button> <button data-car="1">Muscle rojo</button> <button data-car="2">Todoterreno negro</button><p style="font-size:11px;color:#b9d5e8">Pulsa G para cerrar</p></div><div id="tip">Explora la ciudad y busca tu coche azul</div>
 <div id="help"><b>CONTROLES</b><br>WASD / FLECHAS: moverte o conducir<br>E: entrar / salir del coche<br>SHIFT: correr<br>ESPACIO: freno de mano</div><div id="speed">0 km/h</div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x9bc8e5);scene.fog=new THREE.Fog(0x9bc8e5,180,850);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,1400);
-const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;document.body.appendChild(renderer.domElement);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;document.body.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xeaf7ff,0x526044,2));
-const sun=new THREE.DirectionalLight(0xffe4c0,2.5);sun.position.set(-100,180,100);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
+const sun=new THREE.DirectionalLight(0xffe4c0,2.5);sun.position.set(-100,180,100);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);scene.add(sun);
 const mat=(c,r=.85,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(1800,1800),mat(0x547b4a));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
 const roadMat=mat(0x30343a),lineMat=new THREE.MeshBasicMaterial({color:0xe8d99c});
