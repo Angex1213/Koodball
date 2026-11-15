@@ -1,458 +1,76 @@
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KOOD CITY - El Salvador</title>
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KOOD CITY — Open World</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;overflow:hidden;background:#101820;color:white;font-family:Arial}
-canvas{display:block}
-#hud{
- position:fixed;top:14px;left:14px;z-index:5;
- background:#07121de8;border:1px solid #269bff;
- border-radius:12px;padding:13px;min-width:190px;
-}
-#hud h2{margin:0 0 8px;color:#39b5ff}
-#hud small{color:#9bbbd0}
-#location{margin-top:8px;color:#ffe27b}
-#help{
- position:fixed;bottom:12px;left:12px;z-index:5;
- background:#07121de8;padding:12px;border-radius:10px;
- font-size:12px;line-height:1.7
-}
-#tag{
- position:fixed;right:12px;top:12px;
- background:#07121de8;padding:12px;border-radius:10px;
- color:#55caff;font-size:12px
-}
-#speed{
- position:fixed;right:12px;bottom:12px;
- background:#07121de8;padding:12px;border-radius:10px;
- font-size:18px
-}
-</style>
-</head>
-<body>
-
-<div id="hud">
-<h2>🇸🇻 KOOD CITY</h2>
-<small>EL SALVADOR OPEN WORLD</small>
-<div id="location">SOYAPANGO</div>
-</div>
-
-<div id="tag">3D WORLD · V1</div>
-
-<div id="help">
-<b>CONTROLES</b><br>
-W / ↑ : Acelerar<br>
-S / ↓ : Retroceder<br>
-A / ← : Girar izquierda<br>
-D / → : Girar derecha<br>
-ESPACIO : Frenar
-</div>
-
-<div id="speed">0 km/h</div>
-
+*{box-sizing:border-box}body{margin:0;overflow:hidden;background:#101923;color:#fff;font:14px Arial}canvas{display:block}
+#hud{position:fixed;top:14px;left:14px;padding:12px 15px;background:#07121ddd;border:1px solid #36aaff;border-radius:12px;z-index:2;min-width:190px}
+#hud h2{margin:0 0 5px;color:#50c2ff;letter-spacing:2px}#place{color:#ffe18a;margin-top:8px}
+#help{position:fixed;bottom:12px;left:12px;padding:10px 13px;background:#07121ddd;border-radius:10px;line-height:1.65;font-size:12px;z-index:2}
+#speed{position:fixed;right:14px;bottom:14px;background:#07121ddd;border:1px solid #36aaff;border-radius:10px;padding:12px;font-size:18px;z-index:2}
+#mode{position:fixed;right:14px;top:14px;background:#07121ddd;padding:10px 13px;border-radius:10px;color:#75d5ff;z-index:2}
+#tip{position:fixed;top:75px;left:14px;color:#d8eaff;background:#07121daa;padding:7px 10px;border-radius:8px;z-index:2}
+</style></head><body>
+<div id="hud"><h2>KOOD CITY</h2><small>EL SALVADOR • OPEN WORLD PROTOTYPE</small><div id="place">SOYAPANGO</div></div>
+<div id="mode">A PIE</div><div id="tip">Explora la ciudad y busca tu coche azul</div>
+<div id="help"><b>CONTROLES</b><br>WASD / FLECHAS: moverte o conducir<br>E: entrar / salir del coche<br>SHIFT: correr<br>ESPACIO: freno de mano</div><div id="speed">0 km/h</div>
 <script type="module">
-import * as THREE from
-'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-
-const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x91c4e2);
-scene.fog=new THREE.Fog(0x91c4e2,350,1800);
-
-const camera=new THREE.PerspectiveCamera(
-65,innerWidth/innerHeight,0.1,2500
-);
-
-const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.15;
-document.body.appendChild(renderer.domElement);
-
-// LUCES
-scene.add(new THREE.HemisphereLight(0xe5f3ff,0x526044,2));
-
-const sun=new THREE.DirectionalLight(0xffedcf,3);
-sun.position.set(-200,300,150);
-sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
-scene.add(sun);
-
-// MATERIALES
-const material=(color,roughness=.9,metalness=0)=>
- new THREE.MeshStandardMaterial({color,roughness,metalness});
-
-// TERRENO
-const terrain=new THREE.Mesh(
- new THREE.PlaneGeometry(2400,2400),
- material(0x557c48)
-);
-terrain.rotation.x=-Math.PI/2;
-terrain.receiveShadow=true;
-scene.add(terrain);
-
-// MONTAÑAS
-for(let i=0;i<22;i++){
- const h=100+Math.random()*170;
- const mountain=new THREE.Mesh(
-  new THREE.ConeGeometry(65+Math.random()*70,h,8),
-  material(i%2?0x557c52:0x70836a)
- );
- mountain.position.set(
-  (Math.random()-.5)*1900,h/2-15,
-  (Math.random()-.5)*1900
- );
- scene.add(mountain);
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x9bc8e5);scene.fog=new THREE.Fog(0x9bc8e5,180,850);
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,1400);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;document.body.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xeaf7ff,0x526044,2));
+const sun=new THREE.DirectionalLight(0xffe4c0,2.5);sun.position.set(-100,180,100);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
+const mat=(c,r=.85,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(1800,1800),mat(0x547b4a));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+const roadMat=mat(0x30343a),lineMat=new THREE.MeshBasicMaterial({color:0xe8d99c});
+function road(x,z,w,d){let q=new THREE.Mesh(new THREE.PlaneGeometry(w,d),roadMat);q.rotation.x=-Math.PI/2;q.position.set(x,.035,z);scene.add(q);let stripe=new THREE.Mesh(new THREE.PlaneGeometry(Math.min(1,w*.04),d*.92),lineMat);stripe.rotation.x=-Math.PI/2;stripe.position.set(x,.06,z);scene.add(stripe)}
+// Barrio urbano con avenidas y manzanas
+for(let i=-4;i<=4;i++){road(i*100,0,18,900);road(0,i*100,900,18)}
+const colors=[0xc9bba6,0xaab7bd,0xd5cdbd,0x9b9d9a,0xc4a98e,0x8c9da5];
+for(let x=-390;x<=390;x+=50)for(let z=-390;z<=390;z+=50){
+ if(Math.abs(x%100)<22||Math.abs(z%100)<22)continue;
+ const h=10+Math.random()*35,w=22+Math.random()*14,d=22+Math.random()*14;
+ const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(colors[Math.floor(Math.random()*colors.length)]));b.position.set(x,h/2,z);b.castShadow=true;b.receiveShadow=true;scene.add(b);
+ const roof=new THREE.Mesh(new THREE.BoxGeometry(w+.5,.7,d+.5),mat(0x555b60));roof.position.set(x,h+.25,z);scene.add(roof);
+ // ventanas sencillas
+ const glass=mat(0x47788c,.35,.15);
+ for(let yy=4;yy<h-2;yy+=6)for(let xx=-w/2+4;xx<w/2-2;xx+=6){let win=new THREE.Mesh(new THREE.BoxGeometry(2.6,2.4,.12),glass);win.position.set(x+xx,yy,z-d/2-.08);scene.add(win)}
 }
-
-// UBICACIONES APROXIMADAS
-// Coordenadas geográficas convertidas a kilómetros.
-// No representan todavía un trazado vial oficial.
-
-const places = [
- {name:"SOYAPANGO",lat:13.710,lon:-89.139},
- {name:"PLAZA MUNDO",lat:13.710,lon:-89.140},
- {name:"SAN SALVADOR",lat:13.693,lon:-89.219},
- {name:"SANTA TECLA",lat:13.677,lon:-89.280},
- {name:"APOPA",lat:13.807,lon:-89.179},
- {name:"ILOPANGO",lat:13.701,lon:-89.109},
- {name:"SANTA ANA",lat:13.994,lon:-89.560},
- {name:"AHUACHAPAN",lat:13.921,lon:-89.845},
- {name:"SONSONATE",lat:13.719,lon:-89.724},
- {name:"CHALATENANGO",lat:14.078,lon:-89.094},
- {name:"LA PALMA",lat:14.317,lon:-89.170},
- {name:"SUCHITOTO",lat:13.938,lon:-89.027},
- {name:"COJUTEPEQUE",lat:13.719,lon:-88.933},
- {name:"ILOBASCO",lat:13.840,lon:-88.630},
- {name:"SAN VICENTE",lat:13.641,lon:-88.785},
- {name:"APASTEPEQUE",lat:13.663,lon:-88.750},
- {name:"ZACATECOLUCA",lat:13.508,lon:-88.868},
- {name:"USULUTAN",lat:13.346,lon:-88.438},
- {name:"SAN MIGUEL",lat:13.483,lon:-88.177},
- {name:"LA UNION",lat:13.337,lon:-87.844}
-];
-
-const baseLat=places[0].lat;
-const baseLon=places[0].lon;
-
-function position(p){
- return new THREE.Vector3(
-  (p.lon-baseLon)*108*1000*Math.cos(baseLat*Math.PI/180)/1000,
-  0,
-  -(p.lat-baseLat)*111
- );
-}
-
-// ESCALA VISUAL: se comprime el territorio para poder jugar.
-// Mantiene el orden y la dirección aproximada de las localidades.
-const SCALE=.42;
-function world(p){
- const v=position(p);
- return new THREE.Vector3(v.x*SCALE,0,v.z*SCALE);
-}
-
-const locations=places.map(p=>({
- ...p,pos:world(p)
-}));
-
-// CARRETERAS
-function road(a,b,width=13,color=0x30343a){
- const direction=new THREE.Vector3().subVectors(b,a);
- const length=direction.length();
- const mesh=new THREE.Mesh(
-  new THREE.PlaneGeometry(width,length),
-  material(color)
- );
- mesh.rotation.x=-Math.PI/2;
- mesh.rotation.z=-Math.atan2(direction.x,direction.z);
- mesh.position.copy(a).add(b).multiplyScalar(.5);
- mesh.position.y=.025;
- scene.add(mesh);
-}
-
-// CARRETERA PRINCIPAL
-for(let i=0;i<locations.length-1;i++){
- road(locations[i].pos,locations[i+1].pos,15);
-}
-
-// LINEAS VIALES
-function roadLine(a,b){
- const direction=new THREE.Vector3().subVectors(b,a);
- const length=direction.length();
- const mesh=new THREE.Mesh(
-  new THREE.PlaneGeometry(.5,length),
-  new THREE.MeshBasicMaterial({color:0xf0dfa0})
- );
- mesh.rotation.x=-Math.PI/2;
- mesh.rotation.z=-Math.atan2(direction.x,direction.z);
- mesh.position.copy(a).add(b).multiplyScalar(.5);
- mesh.position.y=.06;
- scene.add(mesh);
-}
-for(let i=0;i<locations.length-1;i++){
- roadLine(locations[i].pos,locations[i+1].pos);
-}
-
-// CALLES DE CADA LOCALIDAD
-for(const place of locations){
- for(let j=-3;j<=3;j++){
-  const r1=new THREE.Mesh(
-   new THREE.PlaneGeometry(9,190),
-   material(0x414449)
-  );
-  r1.rotation.x=-Math.PI/2;
-  r1.position.set(place.pos.x+j*27,.035,place.pos.z);
-  scene.add(r1);
-
-  const r2=new THREE.Mesh(
-   new THREE.PlaneGeometry(190,9),
-   material(0x414449)
-  );
-  r2.rotation.x=-Math.PI/2;
-  r2.position.set(place.pos.x,.035,place.pos.z+j*27);
-  scene.add(r2);
- }
-}
-
-// EDIFICIOS
-const buildingColors=[
- 0xc4b9a6,0x9ba4a9,0xd4c9b5,
- 0x858c93,0xb0a99c,0xc4c4b9
-];
-
-function building(x,z,h,w,d){
- const b=new THREE.Mesh(
-  new THREE.BoxGeometry(w,h,d),
-  material(buildingColors[Math.floor(Math.random()*buildingColors.length)])
- );
- b.position.set(x,h/2,z);
- b.castShadow=true;
- b.receiveShadow=true;
- scene.add(b);
-
- // Ventanas
- for(let y=4;y<h-2;y+=6){
-  for(let wx=-w/2+4;wx<w/2-2;wx+=6){
-   const win=new THREE.Mesh(
-    new THREE.BoxGeometry(2.5,2.5,.12),
-    material(0x538398,.3,.2)
-   );
-   win.position.set(x+wx,y,z-d/2-.08);
-   scene.add(win);
-  }
- }
-}
-
-// Centros urbanos y pueblos
-for(let index=0;index<locations.length;index++){
- const center=locations[index].pos;
- const count=index===1||index===2?100:55;
-
- for(let i=0;i<count;i++){
-  const x=center.x+(Math.random()-.5)*210;
-  const z=center.z+(Math.random()-.5)*210;
-
-  if(Math.abs(x-center.x)<17||
-     Math.abs(z-center.z)<17)continue;
-
-  const h=9+Math.random()*40;
-  building(x,z,h,12+Math.random()*12,12+Math.random()*12);
- }
-}
-
-// PLAZA MUNDO
-const plaza=locations[1].pos;
-const mall=new THREE.Mesh(
- new THREE.BoxGeometry(65,17,50),
- material(0xe1d8c9)
-);
-mall.position.set(plaza.x,8.5,plaza.z+48);
-mall.castShadow=true;
-scene.add(mall);
-
-// LETRERO PLAZA MUNDO
-function label(text,pos,color="#ffffff"){
- const canvas=document.createElement("canvas");
- canvas.width=512;
- canvas.height=128;
- const ctx=canvas.getContext("2d");
- ctx.fillStyle="rgba(5,15,25,.85)";
- ctx.fillRect(0,0,512,128);
- ctx.fillStyle=color;
- ctx.font="bold 38px Arial";
- ctx.textAlign="center";
- ctx.fillText(text,256,79);
- const tex=new THREE.CanvasTexture(canvas);
- const sprite=new THREE.Sprite(
-  new THREE.SpriteMaterial({map:tex,transparent:true})
- );
- sprite.position.set(pos.x,22,pos.z);
- sprite.scale.set(65,16,1);
- scene.add(sprite);
-}
-
-for(const place of locations){
- label(place.name,place.pos,
-  place.name==="PLAZA MUNDO"?"#ffe17a":"#ffffff");
-}
-label("PLAZA MUNDO",new THREE.Vector3(plaza.x,0,plaza.z+48),"#ffe17a");
-
-// PALMERAS
-function palm(x,z){
- const trunk=new THREE.Mesh(
-  new THREE.CylinderGeometry(.3,.55,9,8),
-  material(0x795332)
- );
- trunk.position.set(x,4.5,z);
- scene.add(trunk);
-
- for(let i=0;i<7;i++){
-  const leaf=new THREE.Mesh(
-   new THREE.ConeGeometry(1.1,7,6),
-   material(0x236e40)
-  );
-  leaf.position.set(
-   x+Math.cos(i*Math.PI/3.5)*2,
-   9,
-   z+Math.sin(i*Math.PI/3.5)*2
-  );
-  leaf.rotation.z=Math.PI/2;
-  leaf.rotation.y=i*Math.PI/3.5;
-  scene.add(leaf);
- }
-}
-for(const p of locations){
- for(let i=-4;i<=4;i++){
-  palm(p.pos.x+i*20,p.pos.z+100);
- }
-}
-
-// VEHÍCULO
-const car=new THREE.Group();
-
-const body=new THREE.Mesh(
- new THREE.BoxGeometry(3.5,1.15,6),
- new THREE.MeshStandardMaterial({
-  color:0x086bdb,metalness:.65,roughness:.25
- })
-);
-body.position.y=1;
-body.castShadow=true;
-car.add(body);
-
-const cabin=new THREE.Mesh(
- new THREE.BoxGeometry(2.8,1.2,3),
- material(0x203b4e,.2,.3)
-);
-cabin.position.set(0,2,.15);
-car.add(cabin);
-
-const wheels=[];
-for(const x of [-1.9,1.9]){
- for(const z of [-1.9,1.9]){
-  const wheel=new THREE.Mesh(
-   new THREE.CylinderGeometry(.65,.65,.4,24),
-   material(0x111111)
-  );
-  wheel.rotation.z=Math.PI/2;
-  wheel.position.set(x,.65,z);
-  car.add(wheel);
-  wheels.push(wheel);
- }
-}
-scene.add(car);
-car.position.copy(locations[0].pos);
-car.position.y=0;
-
-// PUNTO DE DESTINO
-const destination=new THREE.Mesh(
- new THREE.TorusGeometry(7,.6,12,40),
- new THREE.MeshBasicMaterial({color:0xffdf33})
-);
-destination.rotation.x=Math.PI/2;
-destination.position.copy(locations[4].pos);
-destination.position.y=1;
-scene.add(destination);
-
-// CONTROLES
-const keys={};
-window.addEventListener("keydown",e=>{
- keys[e.key.toLowerCase()]=true;
- if(e.code==="Space")e.preventDefault();
-});
-window.addEventListener("keyup",e=>{
- keys[e.key.toLowerCase()]=false;
-});
-
-// CONDUCCIÓN
-let velocity=0;
-let angle=0;
-const clock=new THREE.Clock();
-
-function animate(){
- requestAnimationFrame(animate);
- const dt=Math.min(clock.getDelta(),.04);
-
- if(keys.w||keys.arrowup)velocity+=22*dt;
- if(keys.s||keys.arrowdown)velocity-=24*dt;
- if(keys[" "])velocity*=Math.pow(.015,dt);
-
- velocity=Math.max(-16,Math.min(48,velocity));
- velocity*=Math.pow(.985,dt*60);
-
- if(Math.abs(velocity)>.5){
-  const turn=(keys.a||keys.arrowleft?1:0)-
-             (keys.d||keys.arrowright?1:0);
-  angle+=turn*dt*1.8*Math.sign(velocity);
- }
-
- car.rotation.y=angle;
- car.position.x-=Math.sin(angle)*velocity*dt;
- car.position.z-=Math.cos(angle)*velocity*dt;
-
- for(const wheel of wheels){
-  wheel.rotation.x+=velocity*dt;
- }
-
- // CÁMARA
- const offset=new THREE.Vector3(
-  Math.sin(angle)*17,9,
-  Math.cos(angle)*17
- );
- const target=car.position.clone().add(offset);
- camera.position.lerp(target,1-Math.pow(.002,dt));
- camera.lookAt(car.position.x,2,car.position.z);
-
- // LOCALIDAD MÁS CERCANA
- let closest=locations[0];
- let min=Infinity;
- for(const p of locations){
-  const d=car.position.distanceTo(p.pos);
-  if(d<min){min=d;closest=p;}
- }
- document.getElementById("location").textContent=closest.name;
- document.getElementById("speed").textContent=
- Math.round(Math.abs(velocity)*4)+" km/h";
-
- destination.rotation.z+=dt;
- renderer.render(scene,camera);
-}
-
-camera.position.set(0,10,20);
-animate();
-
-window.addEventListener("resize",()=>{
- camera.aspect=innerWidth/innerHeight;
- camera.updateProjectionMatrix();
- renderer.setSize(innerWidth,innerHeight);
-});
-</script>
-</body>
-</html>
+// palmeras
+function palm(x,z){let t=new THREE.Mesh(new THREE.CylinderGeometry(.35,.55,8,7),mat(0x765034));t.position.set(x,4,z);scene.add(t);for(let i=0;i<6;i++){let f=new THREE.Mesh(new THREE.ConeGeometry(1.1,7,6),mat(0x247347));f.position.set(x+Math.cos(i)*2,8,z+Math.sin(i)*2);f.rotation.z=Math.PI/2;f.rotation.y=i;scene.add(f)}}
+for(let i=-8;i<=8;i++)for(let j=-8;j<=8;j++)if(Math.abs(i%2)===0)palm(i*48+18,j*48+18);
+// edificios reconocibles
+function sign(txt,x,z){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.fillStyle='#092033';g.fillRect(0,0,512,128);g.fillStyle='#ffe28a';g.font='bold 44px Arial';g.textAlign='center';g.fillText(txt,256,80);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c)}));s.position.set(x,23,z);s.scale.set(52,13,1);scene.add(s)}
+sign('SOYAPANGO',0,-25);sign('PLAZA MUNDO',120,120);
+const mall=new THREE.Mesh(new THREE.BoxGeometry(72,18,48),mat(0xd6d0c5));mall.position.set(120,9,150);mall.castShadow=true;scene.add(mall);
+// personaje original low-poly detallado
+const player=new THREE.Group();scene.add(player);
+const skin=mat(0xb97850),shirt=mat(0x111827),pants=mat(0x202a38),shoe=mat(0x090b10),hair=mat(0x17120f);
+function part(parent,geo,material,x,y,z){const o=new THREE.Mesh(geo,material);o.position.set(x,y,z);o.castShadow=true;parent.add(o);return o}
+part(player,new THREE.CylinderGeometry(.42,.48,1.05,10),shirt,0,1.35,0);
+part(player,new THREE.SphereGeometry(.36,12,10),skin,0,2.12,0);
+part(player,new THREE.SphereGeometry(.37,12,8),hair,0,2.35,-.02);
+const arms=[],legs=[];
+for(const side of [-1,1]){arms.push(part(player,new THREE.CapsuleGeometry(.13,.68,4,8),shirt,side*.57,1.43,0));legs.push(part(player,new THREE.CapsuleGeometry(.17,.68,4,8),pants,side*.23,.55,0));part(player,new THREE.BoxGeometry(.3,.16,.48),shoe,side*.23,.12,.1)}
+player.position.set(0,0,0);
+// coche deportivo propio
+const car=new THREE.Group();scene.add(car);
+part(car,new THREE.BoxGeometry(3.6,1.05,6.2),new THREE.MeshStandardMaterial({color:0x0878e8,metalness:.65,roughness:.24}),0,1,0);
+part(car,new THREE.BoxGeometry(2.8,1.15,3.1),mat(0x23475b,.22,.25),0,2,.1);
+const wheels=[];for(const x of [-1.9,1.9])for(const z of [-2,2]){let w=part(car,new THREE.CylinderGeometry(.62,.62,.42,20),mat(0x101114),x,.62,z);w.rotation.z=Math.PI/2;wheels.push(w)}
+for(const x of [-1.1,1.1]){part(car,new THREE.BoxGeometry(.65,.22,.08),mat(0xfff0c4,.25),x,1.15,3.12);part(car,new THREE.BoxGeometry(.65,.22,.08),mat(0xff2a18,.3),x,1.15,-3.12)}
+car.position.set(8,0,10);
+// autos decorativos estacionados
+for(let i=0;i<14;i++){let c=new THREE.Group();let body=part(c,new THREE.BoxGeometry(3,1,5),mat([0xb52b25,0xeeeeee,0x222a35,0x9b9b9b][i%4],.3,.4),0,.8,0);part(c,new THREE.BoxGeometry(2.4,.9,2.5),mat(0x345366,.25,.2),0,1.65,0);c.position.set((i%7)*100-300,0,Math.floor(i/7)*170-100);c.rotation.y=Math.PI/2;scene.add(c)}
+let driving=false,velocity=0,carAngle=0,playerAngle=0;const keys={};let last=performance.now();
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.code==='Space')e.preventDefault();if(e.key.toLowerCase()==='e')toggleCar()});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+function toggleCar(){if(!driving&&player.position.distanceTo(car.position)<7){driving=true;player.visible=false;document.getElementById('mode').textContent='CONDUCIENDO';document.getElementById('tip').textContent='E para salir del vehículo'}else if(driving){driving=false;player.visible=true;player.position.set(car.position.x+4,0,car.position.z);playerAngle=carAngle;document.getElementById('mode').textContent='A PIE';document.getElementById('tip').textContent='Explora la ciudad y busca tu coche azul'}}
+function nearestName(){let x=player.position.x,z=player.position.z;if(driving){x=car.position.x;z=car.position.z}if(Math.abs(x)<160&&Math.abs(z)<160)return 'SOYAPANGO';if(Math.abs(x-120)<100&&Math.abs(z-120)<100)return 'PLAZA MUNDO';return 'SAN SALVADOR'}
+function animate(now){requestAnimationFrame(animate);let dt=Math.min((now-last)/1000,.04);last=now;
+if(driving){if(keys.w||keys.arrowup)velocity+=25*dt;if(keys.s||keys.arrowdown)velocity-=30*dt;velocity=Math.max(-18,Math.min(55,velocity));if(keys[' '])velocity*=Math.pow(.02,dt);velocity*=Math.pow(.985,dt*60);let turn=(keys.a||keys.arrowleft?1:0)-(keys.d||keys.arrowright?1:0);if(Math.abs(velocity)>.5)carAngle+=turn*dt*1.65*Math.sign(velocity);car.rotation.y=carAngle;car.position.x-=Math.sin(carAngle)*velocity*dt;car.position.z-=Math.cos(carAngle)*velocity*dt;wheels.forEach(w=>w.rotation.x+=velocity*dt);
+}else{let forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0),side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);let speed=keys.shift?12:7;let moving=Math.hypot(forward,side);if(moving){playerAngle=Math.atan2(side,forward);let dx=Math.sin(playerAngle)*speed*dt,dz=-Math.cos(playerAngle)*speed*dt;player.position.x+=dx;player.position.z+=dz;legs.forEach((l,i)=>l.rotation.x=Math.sin(now*.012+i*Math.PI)*.55);arms.forEach((a,i)=>a.rotation.x=-Math.sin(now*.012+i*Math.PI)*.35)}player.rotation.y=playerAngle;velocity=0}
+const focus=driving?car:player;let ang=driving?carAngle:playerAngle;let desired=new THREE.Vector3(focus.position.x+Math.sin(ang)*12,driving?7:6,focus.position.z+Math.cos(ang)*12);camera.position.lerp(desired,1-Math.pow(.002,dt));camera.lookAt(focus.position.x,driving?1.5:1.4,focus.position.z);
+document.getElementById('place').textContent=nearestName();document.getElementById('speed').textContent=Math.round(Math.abs(velocity)*3.6)+' km/h';renderer.render(scene,camera)}
+requestAnimationFrame(animate);
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script></body></html>
