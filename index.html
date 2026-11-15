@@ -21,7 +21,7 @@
 <div id="interact"></div>
 <div id="hud"><h2>KOOD CITY</h2><small>EL SALVADOR • OPEN WORLD PROTOTYPE</small><div id="place">SOYAPANGO</div></div>
 <div id="mode">A PIE</div><div id="clock">08:00 • DÍA</div><div id="mission"><b style="color:#ffe18a">TRABAJO DISPONIBLE</b><br>Ve al marcador dorado para completar tu primer encargo.<br><small>Recompensa: $500</small></div><div id="mapbox"><canvas id="map" width="170" height="170"></canvas></div><div id="money"> $ 1,000</div><div id="garage" style="display:none;position:fixed;right:14px;top:62px;z-index:5;background:#07121df2;border:1px solid #36aaff;border-radius:12px;padding:14px;min-width:190px"><b style="color:#70d0ff">GARAGE KOOD</b><p style="margin:8px 0">Elige tu vehículo:</p><button data-car="0">Deportivo azul</button> <button data-car="1">Muscle rojo</button> <button data-car="2">Todoterreno negro</button><p style="font-size:11px;color:#b9d5e8">Pulsa G para cerrar</p></div><div id="tip">Explora la ciudad y busca tu coche azul</div>
-<div id="help"><b>CONTROLES</b><br>WASD / FLECHAS: moverte o conducir<br>E: entrar / salir del coche<br>F: entrar a locales / interactuar<br>SHIFT: correr<br>ESPACIO: freno de mano</div><div id="speed">0 km/h</div>
+<div id="help"><b>CONTROLES</b><br>WASD / FLECHAS: moverte o conducir<br>E: entrar / salir del coche<br>SHIFT: correr<br>ESPACIO: freno de mano</div><div id="speed">0 km/h</div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x9bc8e5);scene.fog=new THREE.Fog(0x9bc8e5,180,850);
@@ -114,34 +114,35 @@ for(let i=0;i<9;i++){const g=new THREE.Group();const color=[0xe6e6e6,0xc52d25,0x
 const interactionBox=document.getElementById('interact');
 let nearby=null;
 function updateNearby(){
- if(interiorActive){interactionBox.style.display='none';nearby=null;return}const focus=driving?car.position:player.position;let best=1e9;nearby=null;
+ const focus=driving?car.position:player.position;let best=1e9;nearby=null;
  for(const item of interactables){const d=focus.distanceTo(item.pos);if(d<best){best=d;nearby=item}}
  if(nearby&&best<22){interactionBox.style.display='block';interactionBox.innerHTML='<b>'+nearby.name+'</b><br>Presiona F para entrar / visitar<br><small>Interior sencillo en construcción</small>'}
  else{interactionBox.style.display='none';nearby=null}
 }
-let interiorActive=false,returnPosition=new THREE.Vector3();
-const interior=new THREE.Group();interior.position.set(1100,0,1100);scene.add(interior);
-function buildInterior(){
- const floor=new THREE.Mesh(new THREE.BoxGeometry(30,.5,24),mat(0x777d83));floor.position.set(0,.0,0);interior.add(floor);
- const wallMat=mat(0xd5d0c4),dark=mat(0x26394a);
- for(const [x,y,z,w,h,d] of [[0,5,-12,30,10,.5],[0,5,12,30,10,.5],[-15,5,0,.5,10,24],[15,5,0,.5,10,24]]){
-  const wall=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),wallMat);wall.position.set(x,y,z);interior.add(wall);
- }
- const counter=new THREE.Mesh(new THREE.BoxGeometry(10,2,2),dark);counter.position.set(0,1,-5);interior.add(counter);
- const lamp=new THREE.Mesh(new THREE.BoxGeometry(5,.2,5),mat(0xffe8a8));lamp.position.set(0,9,0);interior.add(lamp);
-}
-buildInterior();
 function enterShop(){
- if(!nearby||interiorActive)return;
- const shop=nearby;
- if(driving){driving=false;player.visible=true;player.position.set(car.position.x+4,0,car.position.z);document.getElementById('mode').textContent='A PIE'}
- returnPosition.copy(player.position);interiorActive=true;player.position.set(1100,0,1106);player.rotation.y=Math.PI;
- interactionBox.style.display='block';
- if(shop.name==='CONCESIONARIO'){
-  interactionBox.innerHTML='<b>CONCESIONARIO KOOD</b><br>Compra un vehículo nuevo:<br><button data-buy="0">Deportivo $2,000</button><button data-buy="1">Muscle $3,500</button><button data-buy="2">Todoterreno $5,000</button><br><small id="shopMessage">Tu dinero: 
+ if(!nearby)return;
+ const label=nearby.name;
+ if(label==='CONCESIONARIO'){
+  interactionBox.innerHTML='<b>CONCESIONARIO KOOD</b><br>Elige tu vehículo:<br><button data-buy="0">Deportivo $2,000</button><button data-buy="1">Muscle $3,500</button><button data-buy="2">Todoterreno $5,000</button><button data-buy="3">Moto deportiva $1,500</button><br><small id="shopMessage">Dinero: 
 // ENCARGO INICIAL, DINERO Y MINIMAPA
 let cash=1000,missionDone=false,missionPoint=new THREE.Vector3(285,0,285),gameMinutes=480;
-const marker=new THREE.Mesh(new THREE.TorusGeometry(5,.65,8,28),new THREE.MeshBasicMaterial({color:0xffd34e}));
+function buildMotorcycle(){
+ const g=new THREE.Group(),frame=mat(0xc62929,.32,.45),rubber=mat(0x101114),metal=mat(0x9ba6ad,.3,.7);
+ for(const z of [-1.45,1.45]){
+  const tire=part(g,new THREE.TorusGeometry(.58,.16,10,20),rubber,0,.62,z);tire.rotation.y=Math.PI/2;
+  const hub=part(g,new THREE.CylinderGeometry(.22,.22,.18,16),metal,0,.62,z);hub.rotation.z=Math.PI/2;
+ }
+ part(g,new THREE.BoxGeometry(.55,.65,1.45),frame,0,1.15,0);
+ part(g,new THREE.BoxGeometry(.7,.22,.75),mat(0x171b20),0,1.55,-.15);
+ part(g,new THREE.BoxGeometry(.58,.35,.65),mat(0x222831),0,1.85,.65);
+ const fork=part(g,new THREE.CylinderGeometry(.08,.08,1.2,10),metal,0,1.25,1.1);fork.rotation.x=Math.PI/2;
+ part(g,new THREE.BoxGeometry(.8,.12,.12),metal,0,2.05,1.35);
+ part(g,new THREE.BoxGeometry(.48,.16,.18),mat(0xfff0c4),0,1.65,1.12);
+ return g;
+}
+function buyVehicle(index){
+ const prices=[2000,3500,5000,1500],names=['Deportivo azul','Muscle rojo','Todoterreno negro','Moto deportiva roja'];
+ if(cash<prices[index]){document.getElementById('shopMessage').textContent='Te faltan (5,.65,8,28),new THREE.MeshBasicMaterial({color:0xffd34e}));
 marker.rotation.x=Math.PI/2;marker.position.copy(missionPoint);marker.position.y=1;scene.add(marker);
 const mapCanvas=document.getElementById('map'),mapCtx=mapCanvas.getContext('2d');
 function drawMap(){
@@ -154,7 +155,7 @@ function drawMap(){
  ctx.fillStyle='#55c8ff';ctx.beginPath();ctx.arc(Math.max(4,Math.min(166,px)),Math.max(4,Math.min(166,pz)),5,0,7);ctx.fill();
 }
 let driving=false,velocity=0,carAngle=0,playerAngle=0;const keys={};let last=performance.now();
-addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.code==='Space')e.preventDefault();if(e.key.toLowerCase()==='e')toggleCar();if(e.key.toLowerCase()==='g'){const panel=document.getElementById('garage');panel.style.display=panel.style.display==='none'?'block':'none'}if(e.key.toLowerCase()==='f')enterShop();if(e.key.toLowerCase()==='escape'&&interiorActive)leaveInterior();});
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.code==='Space')e.preventDefault();if(e.key.toLowerCase()==='e')toggleCar();if(e.key.toLowerCase()==='g'){const panel=document.getElementById('garage');panel.style.display=panel.style.display==='none'?'block':'none'}if(e.key.toLowerCase()==='f')enterShop();});
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 function toggleCar(){if(!driving&&player.position.distanceTo(car.position)<7){driving=true;player.visible=false;document.getElementById('mode').textContent='CONDUCIENDO';document.getElementById('tip').textContent='E para salir del vehículo'}else if(driving){driving=false;player.visible=true;player.position.set(car.position.x+4,0,car.position.z);playerAngle=carAngle;document.getElementById('mode').textContent='A PIE';document.getElementById('tip').textContent='Explora la ciudad y busca tu coche azul'}}
 function nearestName(){let x=player.position.x,z=player.position.z;if(driving){x=car.position.x;z=car.position.z}if(Math.abs(x)<160&&Math.abs(z)<160)return 'SOYAPANGO';if(Math.abs(x-120)<100&&Math.abs(z-120)<100)return 'PLAZA MUNDO';return 'SAN SALVADOR'}
@@ -166,24 +167,20 @@ for(const p of pedestrians){p.turn-=dt;if(p.turn<=0){p.angle+=(Math.random()-.5)
 for(const t of traffic){t.progress+=t.speed*dt;const loop=((t.progress%1600)+1600)%1600;t.mesh.position.set(loop-800,0,t.lane);t.mesh.rotation.y=-Math.PI/2}
 if(driving){if(keys.w||keys.arrowup)velocity+=25*dt;if(keys.s||keys.arrowdown)velocity-=30*dt;velocity=Math.max(-18,Math.min(55,velocity));if(keys[' '])velocity*=Math.pow(.02,dt);velocity*=Math.pow(.985,dt*60);let turn=(keys.a||keys.arrowleft?1:0)-(keys.d||keys.arrowright?1:0);if(Math.abs(velocity)>.5)carAngle+=turn*dt*1.65*Math.sign(velocity);car.rotation.y=carAngle;car.position.x-=Math.sin(carAngle)*velocity*dt;car.position.z-=Math.cos(carAngle)*velocity*dt;wheels.forEach(w=>w.rotation.x+=velocity*dt);
 }else{let forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0),side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);let speed=keys.shift?12:7;let moving=Math.hypot(forward,side);if(moving){playerAngle=Math.atan2(side,forward);let dx=Math.sin(playerAngle)*speed*dt,dz=-Math.cos(playerAngle)*speed*dt;player.position.x+=dx;player.position.z+=dz;legs.forEach((l,i)=>l.rotation.x=Math.sin(now*.012+i*Math.PI)*.55);arms.forEach((a,i)=>a.rotation.x=-Math.sin(now*.012+i*Math.PI)*.35)}player.rotation.y=playerAngle;velocity=0}
-const focus=interiorActive?player:(driving?car:player);
+const focus=driving?car:player;
  if(!missionDone){marker.rotation.z+=dt*1.5;const dist=focus.position.distanceTo(missionPoint);document.getElementById('mission').innerHTML='<b style="color:#ffe18a">ENCARGO: ENTREGA</b><br>Dirígete al marcador dorado.<br><small>Distancia: '+Math.round(dist)+' m • Recompensa: $500</small>';if(dist<12){missionDone=true;cash+=500;document.getElementById('money').textContent='$ '+cash.toLocaleString('en-US');document.getElementById('mission').innerHTML='<b style="color:#78e6a2">¡ENCARGO COMPLETADO!</b><br>Ganaste $500. Próximamente habrá más trabajos.';scene.remove(marker)}}
  drawMap();updateNearby();
- let ang=driving?carAngle:playerAngle;let desired=new THREE.Vector3(focus.position.x+Math.sin(ang)*12,interiorActive?7:(driving?7:6),focus.position.z+Math.cos(ang)*12);camera.position.lerp(desired,1-Math.pow(.002,dt));camera.lookAt(focus.position.x,interiorActive?1.5:(driving?1.5:1.4),focus.position.z);
+ let ang=driving?carAngle:playerAngle;let desired=new THREE.Vector3(focus.position.x+Math.sin(ang)*12,driving?7:6,focus.position.z+Math.cos(ang)*12);camera.position.lerp(desired,1-Math.pow(.002,dt));camera.lookAt(focus.position.x,driving?1.5:1.4,focus.position.z);
 document.getElementById('place').textContent=nearestName();document.getElementById('speed').textContent=Math.round(Math.abs(velocity)*3.6)+' km/h';renderer.render(scene,camera)}
 requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-</script></body></html>+cash.toLocaleString('en-US')+'</small><br><button id="leaveShop">Salir</button>';
-  interactionBox.querySelectorAll('[data-buy]').forEach(btn=>btn.onclick=()=>buyCar(Number(btn.dataset.buy)));
+</script></body></html>+cash.toLocaleString('en-US')+'</small><br><button id="leaveShop">Cerrar</button>';
+  interactionBox.querySelectorAll('[data-buy]').forEach(btn=>btn.onclick=()=>buyVehicle(Number(btn.dataset.buy)));
  }else{
-  const descriptions={'SUPERMERCADO':'Compra provisiones y explora el local.','TALLER KOOD':'Aquí podrás personalizar y reparar tus vehículos.','TIENDA':'Bienvenido a la tienda del barrio.','HOSPITAL':'Centro de servicios de la ciudad.'};
-  interactionBox.innerHTML='<b>'+shop.name+'</b><br>'+ (descriptions[shop.name]||'¡Bienvenido!') +'<br><button id="leaveShop">Salir a la ciudad</button>';
+  interactionBox.innerHTML='<b>'+label+'</b><br>¡Bienvenido!<br><button id="leaveShop">Salir</button>';
  }
- document.getElementById('leaveShop').onclick=leaveInterior;
+ document.getElementById('leaveShop').onclick=()=>{interactionBox.style.display='none'};
 }
-function buyCar(index){
- const prices=[2000,3500,5000],names=['Deportivo azul','Muscle rojo','Todoterreno negro'];
- if(cash<prices[index]){document.getElementById('shopMessage').textContent='Te faltan 
 // ENCARGO INICIAL, DINERO Y MINIMAPA
 let cash=1000,missionDone=false,missionPoint=new THREE.Vector3(285,0,285),gameMinutes=480;
 const marker=new THREE.Mesh(new THREE.TorusGeometry(5,.65,8,28),new THREE.MeshBasicMaterial({color:0xffd34e}));
@@ -219,10 +216,50 @@ document.getElementById('place').textContent=nearestName();document.getElementBy
 requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script></body></html>+(prices[index]-cash).toLocaleString('en-US');return}
- cash-=prices[index];selectedCar=index;
- car.children[0].material.color.setHex(carStyles[index]);
+ cash-=prices[index];
+ car.children.slice().forEach(o=>{car.remove(o);if(o.geometry)o.geometry.dispose()});
+ if(index===3){const bike=buildMotorcycle();while(bike.children.length)car.add(bike.children[0]);}
+ else{const colors=[0x0878e8,0xd52b25,0x20252b],fresh=buildGarageCar(colors[index]);while(fresh.children.length)car.add(fresh.children[0]);}
  document.getElementById('money').textContent='$ '+cash.toLocaleString('en-US');
- document.getElementById('shopMessage').textContent='¡Compraste '+names[index]+'! Dinero: 
+ document.getElementById('shopMessage').textContent='¡Compraste '+names[index]+'! Dinero: (5,.65,8,28),new THREE.MeshBasicMaterial({color:0xffd34e}));
+marker.rotation.x=Math.PI/2;marker.position.copy(missionPoint);marker.position.y=1;scene.add(marker);
+const mapCanvas=document.getElementById('map'),mapCtx=mapCanvas.getContext('2d');
+function drawMap(){
+ const ctx=mapCtx;ctx.clearRect(0,0,170,170);ctx.fillStyle='#183526';ctx.fillRect(0,0,170,170);
+ ctx.strokeStyle='#777d82';ctx.lineWidth=4;
+ for(let i=-4;i<=4;i++){let p=85+i*11;ctx.beginPath();ctx.moveTo(p,0);ctx.lineTo(p,170);ctx.stroke();ctx.beginPath();ctx.moveTo(0,p);ctx.lineTo(170,p);ctx.stroke()}
+ const focus=driving?car.position:player.position;
+ const px=85+(focus.x/800)*150,pz=85+(focus.z/800)*150;
+ if(!missionDone){ctx.fillStyle='#ffd34e';ctx.beginPath();ctx.arc(85+(missionPoint.x/800)*150,85+(missionPoint.z/800)*150,4,0,7);ctx.fill()}
+ ctx.fillStyle='#55c8ff';ctx.beginPath();ctx.arc(Math.max(4,Math.min(166,px)),Math.max(4,Math.min(166,pz)),5,0,7);ctx.fill();
+}
+let driving=false,velocity=0,carAngle=0,playerAngle=0;const keys={};let last=performance.now();
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.code==='Space')e.preventDefault();if(e.key.toLowerCase()==='e')toggleCar();if(e.key.toLowerCase()==='g'){const panel=document.getElementById('garage');panel.style.display=panel.style.display==='none'?'block':'none'}if(e.key.toLowerCase()==='f')enterShop();});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+function toggleCar(){if(!driving&&player.position.distanceTo(car.position)<7){driving=true;player.visible=false;document.getElementById('mode').textContent='CONDUCIENDO';document.getElementById('tip').textContent='E para salir del vehículo'}else if(driving){driving=false;player.visible=true;player.position.set(car.position.x+4,0,car.position.z);playerAngle=carAngle;document.getElementById('mode').textContent='A PIE';document.getElementById('tip').textContent='Explora la ciudad y busca tu coche azul'}}
+function nearestName(){let x=player.position.x,z=player.position.z;if(driving){x=car.position.x;z=car.position.z}if(Math.abs(x)<160&&Math.abs(z)<160)return 'SOYAPANGO';if(Math.abs(x-120)<100&&Math.abs(z-120)<100)return 'PLAZA MUNDO';return 'SAN SALVADOR'}
+function animate(now){requestAnimationFrame(animate);let dt=Math.min((now-last)/1000,.04);last=now;
+ gameMinutes=(gameMinutes+dt*2.2)%1440;const hh=String(Math.floor(gameMinutes/60)).padStart(2,'0'),mm=String(Math.floor(gameMinutes%60)).padStart(2,'0');
+ document.getElementById('clock').textContent=hh+':'+mm+(gameMinutes>1080||gameMinutes<360?' • NOCHE':' • DÍA');
+ const night=gameMinutes>1080||gameMinutes<360;sun.intensity=night?.45:2.5;scene.background.set(night?0x18243b:0x9bc8e5);scene.fog.color.set(night?0x18243b:0x9bc8e5);
+for(const p of pedestrians){p.turn-=dt;if(p.turn<=0){p.angle+=(Math.random()-.5)*2.2;p.turn=2+Math.random()*4}p.mesh.position.x+=Math.sin(p.angle)*1.6*dt;p.mesh.position.z+=Math.cos(p.angle)*1.6*dt;p.mesh.rotation.y=p.angle;if(Math.abs(p.mesh.position.x)>430)p.mesh.position.x*=-.9;if(Math.abs(p.mesh.position.z)>430)p.mesh.position.z*=-.9}
+for(const t of traffic){t.progress+=t.speed*dt;const loop=((t.progress%1600)+1600)%1600;t.mesh.position.set(loop-800,0,t.lane);t.mesh.rotation.y=-Math.PI/2}
+if(driving){if(keys.w||keys.arrowup)velocity+=25*dt;if(keys.s||keys.arrowdown)velocity-=30*dt;velocity=Math.max(-18,Math.min(55,velocity));if(keys[' '])velocity*=Math.pow(.02,dt);velocity*=Math.pow(.985,dt*60);let turn=(keys.a||keys.arrowleft?1:0)-(keys.d||keys.arrowright?1:0);if(Math.abs(velocity)>.5)carAngle+=turn*dt*1.65*Math.sign(velocity);car.rotation.y=carAngle;car.position.x-=Math.sin(carAngle)*velocity*dt;car.position.z-=Math.cos(carAngle)*velocity*dt;wheels.forEach(w=>w.rotation.x+=velocity*dt);
+}else{let forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0),side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);let speed=keys.shift?12:7;let moving=Math.hypot(forward,side);if(moving){playerAngle=Math.atan2(side,forward);let dx=Math.sin(playerAngle)*speed*dt,dz=-Math.cos(playerAngle)*speed*dt;player.position.x+=dx;player.position.z+=dz;legs.forEach((l,i)=>l.rotation.x=Math.sin(now*.012+i*Math.PI)*.55);arms.forEach((a,i)=>a.rotation.x=-Math.sin(now*.012+i*Math.PI)*.35)}player.rotation.y=playerAngle;velocity=0}
+const focus=driving?car:player;
+ if(!missionDone){marker.rotation.z+=dt*1.5;const dist=focus.position.distanceTo(missionPoint);document.getElementById('mission').innerHTML='<b style="color:#ffe18a">ENCARGO: ENTREGA</b><br>Dirígete al marcador dorado.<br><small>Distancia: '+Math.round(dist)+' m • Recompensa: $500</small>';if(dist<12){missionDone=true;cash+=500;document.getElementById('money').textContent='$ '+cash.toLocaleString('en-US');document.getElementById('mission').innerHTML='<b style="color:#78e6a2">¡ENCARGO COMPLETADO!</b><br>Ganaste $500. Próximamente habrá más trabajos.';scene.remove(marker)}}
+ drawMap();updateNearby();
+ let ang=driving?carAngle:playerAngle;let desired=new THREE.Vector3(focus.position.x+Math.sin(ang)*12,driving?7:6,focus.position.z+Math.cos(ang)*12);camera.position.lerp(desired,1-Math.pow(.002,dt));camera.lookAt(focus.position.x,driving?1.5:1.4,focus.position.z);
+document.getElementById('place').textContent=nearestName();document.getElementById('speed').textContent=Math.round(Math.abs(velocity)*3.6)+' km/h';renderer.render(scene,camera)}
+requestAnimationFrame(animate);
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script></body></html>+cash.toLocaleString('en-US')+'</small><br><button id="leaveShop">Cerrar</button>';
+  interactionBox.querySelectorAll('[data-buy]').forEach(btn=>btn.onclick=()=>buyVehicle(Number(btn.dataset.buy)));
+ }else{
+  interactionBox.innerHTML='<b>'+label+'</b><br>¡Bienvenido!<br><button id="leaveShop">Salir</button>';
+ }
+ document.getElementById('leaveShop').onclick=()=>{interactionBox.style.display='none'};
+}
 // ENCARGO INICIAL, DINERO Y MINIMAPA
 let cash=1000,missionDone=false,missionPoint=new THREE.Vector3(285,0,285),gameMinutes=480;
 const marker=new THREE.Mesh(new THREE.TorusGeometry(5,.65,8,28),new THREE.MeshBasicMaterial({color:0xffd34e}));
@@ -260,8 +297,44 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
 </script></body></html>+cash.toLocaleString('en-US');
  document.getElementById('tip').textContent='Vehículo comprado: '+names[index];
 }
-function leaveInterior(){
- interiorActive=false;player.position.copy(returnPosition);interactionBox.style.display='none';
+const marker=new THREE.Mesh(new THREE.TorusGeometry(5,.65,8,28),new THREE.MeshBasicMaterial({color:0xffd34e}));
+marker.rotation.x=Math.PI/2;marker.position.copy(missionPoint);marker.position.y=1;scene.add(marker);
+const mapCanvas=document.getElementById('map'),mapCtx=mapCanvas.getContext('2d');
+function drawMap(){
+ const ctx=mapCtx;ctx.clearRect(0,0,170,170);ctx.fillStyle='#183526';ctx.fillRect(0,0,170,170);
+ ctx.strokeStyle='#777d82';ctx.lineWidth=4;
+ for(let i=-4;i<=4;i++){let p=85+i*11;ctx.beginPath();ctx.moveTo(p,0);ctx.lineTo(p,170);ctx.stroke();ctx.beginPath();ctx.moveTo(0,p);ctx.lineTo(170,p);ctx.stroke()}
+ const focus=driving?car.position:player.position;
+ const px=85+(focus.x/800)*150,pz=85+(focus.z/800)*150;
+ if(!missionDone){ctx.fillStyle='#ffd34e';ctx.beginPath();ctx.arc(85+(missionPoint.x/800)*150,85+(missionPoint.z/800)*150,4,0,7);ctx.fill()}
+ ctx.fillStyle='#55c8ff';ctx.beginPath();ctx.arc(Math.max(4,Math.min(166,px)),Math.max(4,Math.min(166,pz)),5,0,7);ctx.fill();
+}
+let driving=false,velocity=0,carAngle=0,playerAngle=0;const keys={};let last=performance.now();
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.code==='Space')e.preventDefault();if(e.key.toLowerCase()==='e')toggleCar();if(e.key.toLowerCase()==='g'){const panel=document.getElementById('garage');panel.style.display=panel.style.display==='none'?'block':'none'}if(e.key.toLowerCase()==='f')enterShop();});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+function toggleCar(){if(!driving&&player.position.distanceTo(car.position)<7){driving=true;player.visible=false;document.getElementById('mode').textContent='CONDUCIENDO';document.getElementById('tip').textContent='E para salir del vehículo'}else if(driving){driving=false;player.visible=true;player.position.set(car.position.x+4,0,car.position.z);playerAngle=carAngle;document.getElementById('mode').textContent='A PIE';document.getElementById('tip').textContent='Explora la ciudad y busca tu coche azul'}}
+function nearestName(){let x=player.position.x,z=player.position.z;if(driving){x=car.position.x;z=car.position.z}if(Math.abs(x)<160&&Math.abs(z)<160)return 'SOYAPANGO';if(Math.abs(x-120)<100&&Math.abs(z-120)<100)return 'PLAZA MUNDO';return 'SAN SALVADOR'}
+function animate(now){requestAnimationFrame(animate);let dt=Math.min((now-last)/1000,.04);last=now;
+ gameMinutes=(gameMinutes+dt*2.2)%1440;const hh=String(Math.floor(gameMinutes/60)).padStart(2,'0'),mm=String(Math.floor(gameMinutes%60)).padStart(2,'0');
+ document.getElementById('clock').textContent=hh+':'+mm+(gameMinutes>1080||gameMinutes<360?' • NOCHE':' • DÍA');
+ const night=gameMinutes>1080||gameMinutes<360;sun.intensity=night?.45:2.5;scene.background.set(night?0x18243b:0x9bc8e5);scene.fog.color.set(night?0x18243b:0x9bc8e5);
+for(const p of pedestrians){p.turn-=dt;if(p.turn<=0){p.angle+=(Math.random()-.5)*2.2;p.turn=2+Math.random()*4}p.mesh.position.x+=Math.sin(p.angle)*1.6*dt;p.mesh.position.z+=Math.cos(p.angle)*1.6*dt;p.mesh.rotation.y=p.angle;if(Math.abs(p.mesh.position.x)>430)p.mesh.position.x*=-.9;if(Math.abs(p.mesh.position.z)>430)p.mesh.position.z*=-.9}
+for(const t of traffic){t.progress+=t.speed*dt;const loop=((t.progress%1600)+1600)%1600;t.mesh.position.set(loop-800,0,t.lane);t.mesh.rotation.y=-Math.PI/2}
+if(driving){if(keys.w||keys.arrowup)velocity+=25*dt;if(keys.s||keys.arrowdown)velocity-=30*dt;velocity=Math.max(-18,Math.min(55,velocity));if(keys[' '])velocity*=Math.pow(.02,dt);velocity*=Math.pow(.985,dt*60);let turn=(keys.a||keys.arrowleft?1:0)-(keys.d||keys.arrowright?1:0);if(Math.abs(velocity)>.5)carAngle+=turn*dt*1.65*Math.sign(velocity);car.rotation.y=carAngle;car.position.x-=Math.sin(carAngle)*velocity*dt;car.position.z-=Math.cos(carAngle)*velocity*dt;wheels.forEach(w=>w.rotation.x+=velocity*dt);
+}else{let forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0),side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);let speed=keys.shift?12:7;let moving=Math.hypot(forward,side);if(moving){playerAngle=Math.atan2(side,forward);let dx=Math.sin(playerAngle)*speed*dt,dz=-Math.cos(playerAngle)*speed*dt;player.position.x+=dx;player.position.z+=dz;legs.forEach((l,i)=>l.rotation.x=Math.sin(now*.012+i*Math.PI)*.55);arms.forEach((a,i)=>a.rotation.x=-Math.sin(now*.012+i*Math.PI)*.35)}player.rotation.y=playerAngle;velocity=0}
+const focus=driving?car:player;
+ if(!missionDone){marker.rotation.z+=dt*1.5;const dist=focus.position.distanceTo(missionPoint);document.getElementById('mission').innerHTML='<b style="color:#ffe18a">ENCARGO: ENTREGA</b><br>Dirígete al marcador dorado.<br><small>Distancia: '+Math.round(dist)+' m • Recompensa: $500</small>';if(dist<12){missionDone=true;cash+=500;document.getElementById('money').textContent='$ '+cash.toLocaleString('en-US');document.getElementById('mission').innerHTML='<b style="color:#78e6a2">¡ENCARGO COMPLETADO!</b><br>Ganaste $500. Próximamente habrá más trabajos.';scene.remove(marker)}}
+ drawMap();updateNearby();
+ let ang=driving?carAngle:playerAngle;let desired=new THREE.Vector3(focus.position.x+Math.sin(ang)*12,driving?7:6,focus.position.z+Math.cos(ang)*12);camera.position.lerp(desired,1-Math.pow(.002,dt));camera.lookAt(focus.position.x,driving?1.5:1.4,focus.position.z);
+document.getElementById('place').textContent=nearestName();document.getElementById('speed').textContent=Math.round(Math.abs(velocity)*3.6)+' km/h';renderer.render(scene,camera)}
+requestAnimationFrame(animate);
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script></body></html>+cash.toLocaleString('en-US')+'</small><br><button id="leaveShop">Cerrar</button>';
+  interactionBox.querySelectorAll('[data-buy]').forEach(btn=>btn.onclick=()=>buyVehicle(Number(btn.dataset.buy)));
+ }else{
+  interactionBox.innerHTML='<b>'+label+'</b><br>¡Bienvenido!<br><button id="leaveShop">Salir</button>';
+ }
+ document.getElementById('leaveShop').onclick=()=>{interactionBox.style.display='none'};
 }
 // ENCARGO INICIAL, DINERO Y MINIMAPA
 let cash=1000,missionDone=false,missionPoint=new THREE.Vector3(285,0,285),gameMinutes=480;
